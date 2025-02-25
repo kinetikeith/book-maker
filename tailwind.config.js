@@ -1,4 +1,6 @@
 import defaultTheme from "tailwindcss/defaultTheme";
+import tailwindDotGridBackgrounds from "@nauverse/tailwind-dot-grid-backgrounds";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: "selector",
@@ -10,5 +12,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [tailwindDotGridBackgrounds],
 };
