@@ -12,6 +12,7 @@ import {
 } from "@headlessui/react";
 import FileSaver from "file-saver";
 import { parse as pathParse } from "path-browserify";
+import Psd from "@webtoon/psd";
 
 /* https://stackoverflow.com/questions/18650168/convert-blob-to-base64 */
 function blobToDataUrl(blob: Blob): Promise<string> {
@@ -20,6 +21,24 @@ function blobToDataUrl(blob: Blob): Promise<string> {
     reader.onloadend = () => resolve(reader.result as string);
     reader.readAsDataURL(blob);
   });
+}
+
+async function psdToDataUrl(blob: Blob): Promise<string> {
+  const psdFile = Psd.parse(await blob.arrayBuffer());
+  const compositeBuffer = await psdFile.composite();
+  const imageData = new ImageData(
+    compositeBuffer,
+    psdFile.width,
+    psdFile.height,
+  );
+
+  const offscreen = new OffscreenCanvas(psdFile.width, psdFile.height);
+  const context = offscreen.getContext("2d");
+
+  context?.putImageData(imageData, 0, 0);
+  return await blobToDataUrl(
+    await offscreen.convertToBlob({ type: "image/png" }),
+  );
 }
 
 const bookTypeLabels = new Map<BookType, string>([
@@ -51,16 +70,23 @@ export default function App() {
     onDrop: async (acceptedFiles) => {
       const file = acceptedFiles[0];
 
+      console.log(file?.type);
       if (file?.type === "image/png") {
         setCoverUrl(await blobToDataUrl(file));
-      } else if (file?.type === "image/vnd.adobe.photoshop") {
+      } else if (
+        ["image/vnd.adobe.photoshop", "application/x-photoshop"].includes(
+          file?.type,
+        )
+      ) {
         console.log("PSD");
+        setCoverUrl(await psdToDataUrl(file));
       }
 
       setFileName(pathParse(file.name).name);
     },
     accept: {
-      //'image/vnd.adobe.photoshop': ['.psd'],
+      "image/vnd.adobe.photoshop": [".psd"],
+      "application/x-photoshop": [".psd"],
       "image/png": [".png"],
     },
     noClick: true,
@@ -79,7 +105,8 @@ export default function App() {
         }
       },
       accept: {
-        //'image/vnd.adobe.photoshop': ['.psd'],
+        "image/vnd.adobe.photoshop": [".psd"],
+        "application/x-photoshop": [".psd"],
         "image/png": [".png"],
       },
       noClick: true,
