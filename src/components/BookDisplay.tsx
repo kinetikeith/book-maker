@@ -1,5 +1,5 @@
 import { Canvas, useLoader } from "@react-three/fiber";
-import { TextureLoader } from "three";
+import { BufferGeometry, TextureLoader } from "three";
 import {
   AccumulativeShadows,
   Environment,
@@ -105,16 +105,27 @@ function PerfectBoundBook({
   );
 }
 
+interface GeometryContainer {
+  geometry: BufferGeometry;
+}
+
 function SaddlestitchBook({ coverMap }: { coverMap: Texture }) {
   const pageMap = useLoader(TextureLoader, "/page-effect.png");
   const coverAspect = coverMap.image.width / coverMap.image.height;
   const { nodes } = useGLTF("/saddlestitch.glb");
   return (
     <group scale={[coverAspect, 1, 1]}>
-      <mesh castShadow receiveShadow geometry={nodes.Cover.geometry}>
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={(nodes.Cover as unknown as GeometryContainer).geometry}
+      >
         <meshStandardMaterial map={coverMap} side={2} shadowSide={2} />
       </mesh>
-      <mesh receiveShadow geometry={nodes.Pages.geometry}>
+      <mesh
+        receiveShadow
+        geometry={(nodes.Pages as unknown as GeometryContainer).geometry}
+      >
         <meshStandardMaterial map={pageMap} side={2} shadowSide={2} />
       </mesh>
     </group>
