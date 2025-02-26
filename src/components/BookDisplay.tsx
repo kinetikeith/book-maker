@@ -155,7 +155,7 @@ export default function BookDisplay({
         gl={{ antialias: true, preserveDrawingBuffer: true }}
         dpr={[2, 4]}
       >
-        <Environment files={["public/environment.hdr"]} />
+        <Environment files={["environment.hdr"]} />
         <EffectComposer enableNormalPass multisampling={32}>
           <N8AO
             color="black"
