@@ -6,7 +6,7 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "/bookmaker/",
+  base: "/book-maker/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
