@@ -111,19 +111,11 @@ function SaddlestitchBook({ coverMap }: { coverMap: Texture }) {
   const { nodes } = useGLTF("/saddlestitch.glb");
   return (
     <group scale={[coverAspect, 1, 1]}>
-      <mesh receiveShadow geometry={nodes.Cover.geometry}>
+      <mesh castShadow receiveShadow geometry={nodes.Cover.geometry}>
         <meshStandardMaterial map={coverMap} side={2} shadowSide={2} />
       </mesh>
       <mesh receiveShadow geometry={nodes.Pages.geometry}>
         <meshStandardMaterial map={pageMap} side={2} shadowSide={2} />
-      </mesh>
-      <mesh
-        castShadow
-        geometry={nodes.Cover.geometry}
-        scale={[0.98, 0.98, 0.98]}
-        position={[0, -0.01, 0]}
-      >
-        <meshStandardMaterial shadowSide={2} />
       </mesh>
     </group>
   );
@@ -191,7 +183,7 @@ export default function BookDisplay({
           alphaTest={0.99}
           opacity={1.0}
         >
-          <RandomizedLight radius={30} position={[5, 20, 5]} bias={0.001} />
+          <RandomizedLight radius={30} position={[5, 20, 5]} bias={0.00001} />
         </AccumulativeShadows>
       </Canvas>
     </div>

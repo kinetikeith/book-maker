@@ -78,11 +78,12 @@ export default function App() {
           file?.type,
         )
       ) {
-        console.log("PSD");
         setCoverUrl(await psdToDataUrl(file));
       }
 
       setFileName(pathParse(file.name).name);
+
+      if (coverInputRef.current !== null) coverInputRef.current.value = "";
     },
     accept: {
       "image/vnd.adobe.photoshop": [".psd"],
@@ -100,9 +101,15 @@ export default function App() {
 
         if (file?.type === "image/png") {
           setSpineUrl(await blobToDataUrl(file));
-        } else if (file?.type === "image/vnd.adobe.photoshop") {
-          console.log("PSD");
+        } else if (
+          ["image/vnd.adobe.photoshop", "application/x-photoshop"].includes(
+            file?.type,
+          )
+        ) {
+          setSpineUrl(await psdToDataUrl(file));
         }
+
+        if (spineInputRef.current !== null) spineInputRef.current.value = "";
       },
       accept: {
         "image/vnd.adobe.photoshop": [".psd"],
@@ -117,11 +124,10 @@ export default function App() {
     const canvas: HTMLCanvasElement | null = document.querySelector("canvas");
     console.log(document.querySelectorAll("canvas"));
     if (canvas !== null)
-      canvas.toBlob(
-        (blob) => FileSaver.saveAs(blob, `${fileName}.png`),
-        "image/png",
-      );
-  }, []);
+      canvas.toBlob((blob) => {
+        if (blob !== null) FileSaver.saveAs(blob, `${fileName}.png`);
+      }, "image/png");
+  }, [fileName]);
 
   return (
     <>
