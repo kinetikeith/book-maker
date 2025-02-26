@@ -50,8 +50,8 @@ const bookTypeLabels = new Map<BookType, string>([
 export default function App() {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const spineInputRef = useRef<HTMLInputElement>(null);
-  const [coverUrl, setCoverUrl] = useState("/template-cover.png");
-  const [spineUrl, setSpineUrl] = useState("/template-spine.png");
+  const [coverUrl, setCoverUrl] = useState("template-cover.png");
+  const [spineUrl, setSpineUrl] = useState("template-spine.png");
   const [backColor, setBackColor] = useState("#3db999");
   const [backColorTemp, setBackColorTemp] = useState("#3db999");
   const [bookType, setBookType] = useState<BookType>(BookType.PerfectBound);

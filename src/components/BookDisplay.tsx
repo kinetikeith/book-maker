@@ -110,9 +110,9 @@ interface GeometryContainer {
 }
 
 function SaddlestitchBook({ coverMap }: { coverMap: Texture }) {
-  const pageMap = useLoader(TextureLoader, "/page-effect.png");
+  const pageMap = useLoader(TextureLoader, "page-effect.png");
   const coverAspect = coverMap.image.width / coverMap.image.height;
-  const { nodes } = useGLTF("/saddlestitch.glb");
+  const { nodes } = useGLTF("saddlestitch.glb");
   return (
     <group scale={[coverAspect, 1, 1]}>
       <mesh
