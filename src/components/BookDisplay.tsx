@@ -146,12 +146,25 @@ export default function BookDisplay({
   const coverMap = useLoader(TextureLoader, coverUrl);
   const spineMap = useLoader(TextureLoader, spineUrl);
 
+  const coverAspect = coverMap.image.width / coverMap.image.height;
+  const spineAspect = spineMap.image.width / spineMap.image.height;
+
+  let itemScalingInv = coverAspect;
+  if (bookType !== BookType.Saddlestitch) itemScalingInv += spineAspect * 0.5;
+
+  const imageHeight = 400 / itemScalingInv;
+
   return (
-    <div className="w-[500px] h-[600px]">
+    <div
+      style={{
+        width: "500px",
+        height: `${imageHeight}px`,
+      }}
+    >
       <Canvas
         shadows
         orthographic
-        camera={{ position: [-4, 1.5, 10], zoom: 430, near: 1, far: 20 }}
+        camera={{ position: [-4, 1.5, 10], zoom: 340, near: 1, far: 20 }}
         gl={{ antialias: true, preserveDrawingBuffer: true }}
         dpr={[2, 4]}
       >
@@ -166,36 +179,38 @@ export default function BookDisplay({
           />
           <SMAA />
         </EffectComposer>
-        {bookType === BookType.Hardcover ? (
-          <HardcoverBook
-            coverMap={coverMap}
-            spineMap={spineMap}
-            backColor={backColor}
-          />
-        ) : null}
-        {bookType === BookType.PerfectBound ? (
-          <PerfectBoundBook coverMap={coverMap} spineMap={spineMap} />
-        ) : null}
-        {bookType === BookType.Saddlestitch ? (
-          <SaddlestitchBook coverMap={coverMap} />
-        ) : null}
-        <mesh
-          castShadow
-          rotation={[-Math.PI / 2.0, 0, 0]}
-          position={[0, -0.501, 0]}
-        >
-          <planeGeometry args={[2, 2]} />
-          <shadowMaterial transparent opacity={0} />
-        </mesh>
-        <AccumulativeShadows
-          position={[0, -0.5, 0]}
-          temporal
-          frames={100}
-          alphaTest={0.99}
-          opacity={1.0}
-        >
-          <RandomizedLight radius={30} position={[5, 20, 5]} bias={0.00001} />
-        </AccumulativeShadows>
+        <group scale={1.0 / itemScalingInv}>
+          {bookType === BookType.Hardcover ? (
+            <HardcoverBook
+              coverMap={coverMap}
+              spineMap={spineMap}
+              backColor={backColor}
+            />
+          ) : null}
+          {bookType === BookType.PerfectBound ? (
+            <PerfectBoundBook coverMap={coverMap} spineMap={spineMap} />
+          ) : null}
+          {bookType === BookType.Saddlestitch ? (
+            <SaddlestitchBook coverMap={coverMap} />
+          ) : null}
+          <mesh
+            castShadow
+            rotation={[-Math.PI / 2.0, 0, 0]}
+            position={[0, -0.501, 0]}
+          >
+            <planeGeometry args={[2, 2]} />
+            <shadowMaterial transparent opacity={0} />
+          </mesh>
+          <AccumulativeShadows
+            position={[0, -0.5, 0]}
+            temporal
+            frames={100}
+            alphaTest={0.99}
+            opacity={1.0}
+          >
+            <RandomizedLight radius={35} position={[5, 25, 5]} bias={0.001} />
+          </AccumulativeShadows>
+        </group>
       </Canvas>
     </div>
   );
