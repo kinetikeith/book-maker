@@ -114,7 +114,7 @@ function SaddlestitchBook({ coverMap }: { coverMap: Texture }) {
   const coverAspect = coverMap.image.width / coverMap.image.height;
   const { nodes } = useGLTF("saddlestitch.glb");
   return (
-    <group scale={[coverAspect, 1, 1]}>
+    <group scale={[coverAspect, 1, 1]} position={[0, -0.002, 0]}>
       <mesh
         castShadow
         receiveShadow
@@ -126,7 +126,7 @@ function SaddlestitchBook({ coverMap }: { coverMap: Texture }) {
         receiveShadow
         geometry={(nodes.Pages as unknown as GeometryContainer).geometry}
       >
-        <meshStandardMaterial map={pageMap} side={2} shadowSide={2} />
+        <meshStandardMaterial map={pageMap} side={2} />
       </mesh>
     </group>
   );
@@ -151,11 +151,11 @@ export default function BookDisplay({
       <Canvas
         shadows
         orthographic
-        camera={{ position: [-4, 1.5, 10], zoom: 400, near: 1, far: 20 }}
+        camera={{ position: [-4, 1.5, 10], zoom: 430, near: 1, far: 20 }}
         gl={{ antialias: true, preserveDrawingBuffer: true }}
         dpr={[2, 4]}
       >
-        <Environment files={["environment.hdr"]} />
+        <Environment files={["environment.hdr"]} environmentIntensity={0.93} />
         <EffectComposer enableNormalPass multisampling={32}>
           <N8AO
             color="black"
