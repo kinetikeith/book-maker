@@ -2,7 +2,6 @@ import { Canvas, useLoader } from "@react-three/fiber";
 import { BufferGeometry, TextureLoader } from "three";
 import {
   AccumulativeShadows,
-  Environment,
   RandomizedLight,
   useGLTF,
 } from "@react-three/drei";
@@ -168,7 +167,12 @@ export default function BookDisplay({
         gl={{ antialias: true, preserveDrawingBuffer: true }}
         dpr={[2, 4]}
       >
-        <Environment files={["environment.hdr"]} environmentIntensity={0.93} />
+        <pointLight
+          color={0xffffff}
+          position={[-9, 25, 10]}
+          intensity={5000.0}
+          distance={0}
+        />
         <EffectComposer enableNormalPass multisampling={32}>
           <N8AO
             color="black"
