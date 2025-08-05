@@ -5,7 +5,7 @@ import {
   RandomizedLight,
   useGLTF,
 } from "@react-three/drei";
-import { EffectComposer, N8AO, SMAA } from "@react-three/postprocessing";
+import { EffectComposer, N8AO, FXAA } from "@react-three/postprocessing";
 import { Texture } from "three";
 
 export enum BookType {
@@ -136,11 +136,13 @@ export default function BookDisplay({
   spineUrl,
   backColor,
   bookType,
+  scale,
 }: {
   coverUrl: string;
   spineUrl: string;
   backColor: string;
   bookType: BookType;
+  scale: number;
 }) {
   const coverMap = useLoader(TextureLoader, coverUrl);
   const spineMap = useLoader(TextureLoader, spineUrl);
@@ -151,21 +153,27 @@ export default function BookDisplay({
   let itemScalingInv = coverAspect;
   if (bookType !== BookType.Saddlestitch) itemScalingInv += spineAspect * 0.5;
 
-  const imageHeight = 400 / itemScalingInv;
+  const imageWidth = 600;
+  const zoom = imageWidth * 0.68;
+  const imageHeight = (imageWidth * 0.8) / itemScalingInv;
+  const dpr = scale * 2;
+  const finalWidth = imageWidth * dpr;
+  const finalHeight = imageHeight * dpr;
 
   return (
     <div
       style={{
-        width: "500px",
+        width: `${imageWidth}px`,
         height: `${imageHeight}px`,
       }}
+      className="relative flex flex-col items-center"
     >
       <Canvas
         shadows
         orthographic
-        camera={{ position: [-4, 1.5, 10], zoom: 340, near: 1, far: 20 }}
+        camera={{ position: [-4, 1.5, 10], zoom: zoom, near: 1, far: 20 }}
         gl={{ antialias: true, preserveDrawingBuffer: true }}
-        dpr={[2, 4]}
+        dpr={[dpr, dpr]}
       >
         <pointLight
           color={0xffffff}
@@ -174,6 +182,7 @@ export default function BookDisplay({
           distance={0}
         />
         <EffectComposer enableNormalPass multisampling={32}>
+          <FXAA />
           <N8AO
             color="black"
             aoRadius={0.05}
@@ -181,7 +190,6 @@ export default function BookDisplay({
             aoSamples={300}
             denoiseSamples={16}
           />
-          <SMAA />
         </EffectComposer>
         <group scale={1.0 / itemScalingInv}>
           {bookType === BookType.Hardcover ? (
@@ -216,6 +224,15 @@ export default function BookDisplay({
           </AccumulativeShadows>
         </group>
       </Canvas>
+      <div className="text-gray-200 text-sm font-medium absolute -bottom-8 text-center px-4 py-2 rounded-md z-10 bg-gray-600">
+        <div>
+          {imageWidth * dpr} &times; {(imageHeight * dpr).toFixed(0)} pixels
+        </div>
+        <div>
+          {(finalWidth / 300).toFixed(2)}" &times;{" "}
+          {(finalHeight / 300).toFixed(2)}" @ 300ppi
+        </div>
+      </div>
     </div>
   );
 }

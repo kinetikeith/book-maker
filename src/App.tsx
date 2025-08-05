@@ -4,7 +4,9 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import {
   Button,
+  Field,
   Input,
+  Label,
   Listbox,
   ListboxButton,
   ListboxOption,
@@ -60,6 +62,13 @@ const bookTypeLabels = new Map<BookType, string>([
   [BookType.Saddlestitch, "Saddlestitch"],
 ]);
 
+const scaleLabels = new Map<number, string>([
+  [1.0, "100%"],
+  [1.5, "150%"],
+  [2.0, "200%"],
+  [2.5, "250%"],
+]);
+
 export default function App() {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const spineInputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +77,18 @@ export default function App() {
   const [backColor, setBackColor] = useState("#3db999");
   const [backColorTemp, setBackColorTemp] = useState("#3db999");
   const [bookType, setBookType] = useState<BookType>(BookType.PerfectBound);
+
+  const [scale, setScale] = useState<number>(1.0);
+
+  /*
+  const params = new URLSearchParams(document.location.search);
+  const scale = parseFloat(params.get("scale") || "1.0");
+  const setScale = useCallback((value: number) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set("scale", value.toFixed(1));
+    window.location.search = urlParams.toString();
+  }, []);
+  */
 
   const [fileName, setFileName] = useState("Untitled");
   const [copied, setCopied] = useState(false);
@@ -84,7 +105,6 @@ export default function App() {
     onDrop: async (acceptedFiles) => {
       const file = acceptedFiles[0];
 
-      console.log(file?.type);
       if (file?.type === "image/png") {
         setCoverUrl(await blobToDataUrl(file));
       } else if (
@@ -141,7 +161,6 @@ export default function App() {
 
   const triggerDownload = useCallback(async () => {
     const canvas: HTMLCanvasElement | null = document.querySelector("canvas");
-    console.log(document.querySelectorAll("canvas"));
     if (canvas !== null)
       FileSaver.saveAs(await canvasToBlob(canvas), `${fileName}.png`);
   }, [fileName]);
@@ -168,14 +187,11 @@ export default function App() {
   return (
     <>
       <section className="fixed right-4 top-4 flex flex-col items-stetch space-y-4 bg-gray-900 p-4 rounded-xl w-80">
-        <div>
-          <label
-            htmlFor="book_type"
-            className="block mb-2 text-sm font-medium text-white"
-          >
+        <Field className="relative">
+          <Label className="block mb-2 text-sm font-medium text-white">
             Book Type
-          </label>
-          <div className="relative">
+          </Label>
+          <div>
             <Listbox value={bookType} onChange={setBookType}>
               <ListboxButton className="border text-sm rounded-lg block w-full text-left p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
                 {bookTypeLabels.get(bookType)}
@@ -193,7 +209,7 @@ export default function App() {
               </ListboxOptions>
             </Listbox>
           </div>
-        </div>
+        </Field>
         <div
           data-success={coverExists ? true : undefined}
           className="flex items-center justify-center h-full text-gray-500 data-[success]:text-green-400"
@@ -281,6 +297,27 @@ export default function App() {
             />
           </div>
         ) : null}
+        <Field className="relative">
+          <Label className="block mb-2 text-sm font-medium text-white">
+            Scale
+          </Label>
+          <Listbox value={scale} onChange={setScale}>
+            <ListboxButton className="border text-sm rounded-lg block w-full text-left p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
+              {scaleLabels.get(scale)}
+            </ListboxButton>
+            <ListboxOptions className="absolute inset-x-0 top-0 border text-sm rounded-lg block overflow-clip w-full bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
+              {[...scaleLabels.entries()].map(([scale, label]) => (
+                <ListboxOption
+                  value={scale}
+                  key={scale}
+                  className="p-2.5 hover:bg-gray-800 cursor-pointer"
+                >
+                  {label}
+                </ListboxOption>
+              ))}
+            </ListboxOptions>
+          </Listbox>
+        </Field>
         <Button
           onClick={triggerDownload}
           className="text-white focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-blue-800 w-full"
@@ -301,6 +338,7 @@ export default function App() {
           spineUrl={spineUrl}
           backColor={backColor}
           bookType={bookType}
+          scale={scale}
         />
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center"></footer>
