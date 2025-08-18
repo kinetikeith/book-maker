@@ -1,6 +1,13 @@
 import { useDropzone } from "react-dropzone";
 import BookDisplay, { BookType } from "./components/BookDisplay";
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  ClipboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { HexColorPicker } from "react-colorful";
 import {
   Button,
@@ -74,6 +81,7 @@ export default function App() {
   const spineInputRef = useRef<HTMLInputElement>(null);
   const [coverUrl, setCoverUrl] = useState(defaultCover);
   const [spineUrl, setSpineUrl] = useState(defaultSpine);
+  const [unknownUrl, setUnknownUrl] = useState<string | null>(null);
   const [backColor, setBackColor] = useState("#3db999");
   const [backColorTemp, setBackColorTemp] = useState("#3db999");
   const [bookType, setBookType] = useState<BookType>(BookType.PerfectBound);
@@ -184,8 +192,34 @@ export default function App() {
   const coverExists = coverUrl !== defaultCover;
   const spineExists = spineUrl !== defaultSpine;
 
+  const handlePaste = async (event: ClipboardEvent<HTMLDivElement>) => {
+    const file = event.clipboardData?.files[0];
+
+    if (file === undefined) return;
+    if (file === null) return;
+    if (file.type !== "image/png") return;
+
+    console.debug(`Pasted ${file.type}!`);
+    const imageUrl = await blobToDataUrl(file);
+    if (bookType === BookType.Saddlestitch) {
+      setCoverUrl(imageUrl);
+    } else {
+      setUnknownUrl(imageUrl);
+    }
+  };
+
+  const affirmCover = () => {
+    if (unknownUrl !== null) setCoverUrl(unknownUrl);
+    setUnknownUrl(null);
+  };
+
+  const affirmSpine = () => {
+    if (unknownUrl !== null) setSpineUrl(unknownUrl);
+    setUnknownUrl(null);
+  };
+
   return (
-    <>
+    <div onPaste={handlePaste}>
       <section className="fixed right-4 top-4 flex flex-col items-stetch space-y-4 bg-gray-900 p-4 rounded-xl w-80">
         <Field className="relative">
           <Label className="block mb-2 text-sm font-medium text-white">
@@ -342,6 +376,33 @@ export default function App() {
         />
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center"></footer>
-    </>
+      <div
+        className="fixed inset-0 flex flex-col items-center justify-center backdrop-blur-lg z-20 bg-gray-500/50 data-[hidden=true]:hidden"
+        data-hidden={unknownUrl === null}
+      >
+        <section className="flex flex-col items-stetch space-y-4 bg-gray-900 p-4 rounded-xl w-80 text-white">
+          <div>
+            <h2 className="block mb-2 text-lg font-medium">
+              Pasted From Clipboard
+            </h2>
+            <div className="text-sm font-light pt-0">
+              What type of image was just pasted from the clipboard?
+            </div>
+          </div>
+          <Button
+            onClick={affirmCover}
+            className="text-white focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-blue-800 w-full"
+          >
+            Cover
+          </Button>
+          <Button
+            onClick={affirmSpine}
+            className="text-white focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-blue-800 w-full"
+          >
+            Spine
+          </Button>
+        </section>
+      </div>
+    </div>
   );
 }
