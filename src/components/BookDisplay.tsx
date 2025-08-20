@@ -155,7 +155,7 @@ export default function BookDisplay({
 
   const imageWidth = 600;
   const zoom = imageWidth * 0.68;
-  const imageHeight = (imageWidth * 0.8) / itemScalingInv;
+  const imageHeight = Math.min((imageWidth * 0.8) / itemScalingInv, 900);
   const dpr = scale * 2;
   const finalWidth = imageWidth * dpr;
   const finalHeight = imageHeight * dpr;
