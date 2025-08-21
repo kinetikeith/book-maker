@@ -5,7 +5,12 @@ import {
   RandomizedLight,
   useGLTF,
 } from "@react-three/drei";
-import { EffectComposer, N8AO, FXAA } from "@react-three/postprocessing";
+import {
+  EffectComposer,
+  N8AO,
+  FXAA,
+  BrightnessContrast,
+} from "@react-three/postprocessing";
 import { Texture } from "three";
 
 export enum BookType {
@@ -24,13 +29,22 @@ function HardcoverBook({
   backColor: string;
 }) {
   const pageMap = useLoader(TextureLoader, "page-effect.png");
+  const coverNormalMap = useLoader(TextureLoader, "hardcover-cover-normal.png");
+  const spineNormalMap = useLoader(TextureLoader, "hardcover-spine-normal.png");
   const coverAspect = coverMap.image.width / coverMap.image.height;
   const spineAspect = spineMap.image.width / spineMap.image.height;
   return (
     <group>
       <mesh castShadow receiveShadow position={[0, 0, spineAspect / 2]}>
         <planeGeometry args={[coverAspect, 1]} />
-        <meshStandardMaterial map={coverMap} side={2} shadowSide={2} />
+        <meshStandardMaterial
+          map={coverMap}
+          normalMap={coverNormalMap}
+          side={2}
+          shadowSide={2}
+          roughness={0.1}
+          normalScale={0.5}
+        />
       </mesh>
       <mesh
         castShadow
@@ -39,7 +53,14 @@ function HardcoverBook({
         position={[-coverAspect / 2, 0, 0]}
       >
         <planeGeometry args={[spineAspect, 1]} />
-        <meshStandardMaterial map={spineMap} side={2} shadowSide={2} />
+        <meshStandardMaterial
+          map={spineMap}
+          normalMap={spineNormalMap}
+          side={2}
+          shadowSide={2}
+          roughness={0.1}
+          normalScale={0.5}
+        />
       </mesh>
       <mesh
         castShadow
@@ -52,7 +73,14 @@ function HardcoverBook({
       </mesh>
       <mesh castShadow receiveShadow position={[0, 0, -spineAspect / 2]}>
         <planeGeometry args={[coverAspect, 1]} />
-        <meshStandardMaterial side={2} shadowSide={2} color={backColor} />
+        <meshStandardMaterial
+          normalMap={coverNormalMap}
+          side={2}
+          shadowSide={2}
+          color={backColor}
+          roughness={0.1}
+          normalScale={0.5}
+        />
       </mesh>
       <mesh castShadow position={[0, -0.25, 0]}>
         <boxGeometry args={[coverAspect - 0.01, 0.5, spineAspect - 0.01]} />
@@ -70,13 +98,27 @@ function PerfectBoundBook({
   spineMap: Texture;
 }) {
   const pageMap = useLoader(TextureLoader, "page-effect.png");
+  const coverNormalMap = useLoader(
+    TextureLoader,
+    "perfectbound-cover-normal.png",
+  );
+  const spineNormalMap = useLoader(
+    TextureLoader,
+    "perfectbound-spine-normal.png",
+  );
   const coverAspect = coverMap.image.width / coverMap.image.height;
   const spineAspect = spineMap.image.width / spineMap.image.height;
   return (
     <group>
       <mesh castShadow receiveShadow position={[0, 0, spineAspect / 2]}>
         <planeGeometry args={[coverAspect, 1]} />
-        <meshStandardMaterial map={coverMap} side={2} shadowSide={2} />
+        <meshStandardMaterial
+          map={coverMap}
+          normalMap={coverNormalMap}
+          side={2}
+          shadowSide={2}
+          normalScale={0.7}
+        />
       </mesh>
       <mesh
         castShadow
@@ -85,7 +127,13 @@ function PerfectBoundBook({
         position={[-coverAspect / 2, 0, 0]}
       >
         <planeGeometry args={[spineAspect, 1]} />
-        <meshStandardMaterial map={spineMap} side={2} shadowSide={2} />
+        <meshStandardMaterial
+          map={spineMap}
+          normalMap={spineNormalMap}
+          side={2}
+          shadowSide={2}
+          normalScale={0.7}
+        />
       </mesh>
       <mesh
         castShadow
@@ -171,17 +219,18 @@ export default function BookDisplay({
       <Canvas
         shadows
         orthographic
-        camera={{ position: [-4, 1.5, 10], zoom: zoom, near: 1, far: 20 }}
+        camera={{ position: [-4, 1.5, 10], zoom: zoom, near: 1, far: 200 }}
         gl={{ antialias: true, preserveDrawingBuffer: true }}
         dpr={[dpr, dpr]}
       >
         <pointLight
           color={0xffffff}
           position={[-9, 25, 10]}
-          intensity={5000.0}
+          intensity={7300.0}
           distance={0}
         />
         <EffectComposer enableNormalPass multisampling={32}>
+          <BrightnessContrast contrast={0.1} />
           <FXAA />
           <N8AO
             color="black"
