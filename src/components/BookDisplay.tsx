@@ -12,12 +12,8 @@ import {
   BrightnessContrast,
 } from "@react-three/postprocessing";
 import { Texture } from "three";
-
-export enum BookType {
-  PerfectBound,
-  Hardcover,
-  Saddlestitch,
-}
+import { useEffect, useMemo } from "react";
+import { BookType, ScalingMode } from "../enums.ts";
 
 function HardcoverBook({
   coverMap,
@@ -184,13 +180,15 @@ export default function BookDisplay({
   spineUrl,
   backColor,
   bookType,
-  scale,
+  scalingMode,
+  size,
 }: {
   coverUrl: string;
   spineUrl: string;
   backColor: string;
   bookType: BookType;
-  scale: number;
+  scalingMode: ScalingMode;
+  size: number;
 }) {
   const coverMap = useLoader(TextureLoader, coverUrl);
   const spineMap = useLoader(TextureLoader, spineUrl);
@@ -198,28 +196,50 @@ export default function BookDisplay({
   const coverAspect = coverMap.image.width / coverMap.image.height;
   const spineAspect = spineMap.image.width / spineMap.image.height;
 
-  let itemScalingInv = coverAspect;
-  if (bookType !== BookType.Saddlestitch) itemScalingInv += spineAspect * 0.5;
+  const { imageWidth, imageHeight, zoom } = useMemo(() => {
+    let itemScalingInv = coverAspect;
+    if (bookType !== BookType.Saddlestitch) itemScalingInv += spineAspect * 0.5;
 
+    if (scalingMode === ScalingMode.FixedWidth) {
+      return {
+        imageWidth: size,
+        imageHeight: (size * 0.8) / itemScalingInv,
+        zoom: size * 0.45,
+      };
+    } else {
+      return {
+        imageWidth: size * itemScalingInv,
+        imageHeight: size,
+        zoom: size * 0.3,
+      };
+    }
+  }, [scalingMode, size, coverAspect, spineAspect, bookType]);
+
+  /*
   const imageWidth = 600;
   const zoom = imageWidth * 0.68;
   const imageHeight = Math.min((imageWidth * 0.8) / itemScalingInv, 900);
-  const dpr = scale * 2;
-  const finalWidth = imageWidth * dpr;
-  const finalHeight = imageHeight * dpr;
+  */
+  const dpr = Math.max(imageWidth / 600, 1);
+  const viewWidth = imageWidth / dpr;
+  const viewHeight = imageHeight / dpr;
+
+  useEffect(() => {
+    console.log("zoom: ", zoom);
+  }, [zoom]);
 
   return (
     <div
       style={{
-        width: `${imageWidth}px`,
-        height: `${imageHeight}px`,
+        width: `${viewWidth}px`,
+        height: `${viewHeight}px`,
       }}
       className="relative flex flex-col items-center"
     >
       <Canvas
         shadows
         orthographic
-        camera={{ position: [-4, 1.5, 10], zoom: zoom, near: 1, far: 200 }}
+        camera={{ position: [-4, 1.5, 10], zoom: 400, near: 1, far: 200 }}
         gl={{ antialias: true, preserveDrawingBuffer: true }}
         dpr={[dpr, dpr]}
       >
@@ -240,7 +260,7 @@ export default function BookDisplay({
             denoiseSamples={16}
           />
         </EffectComposer>
-        <group scale={1.0 / itemScalingInv}>
+        <group scale={viewHeight / 600}>
           {bookType === BookType.Hardcover ? (
             <HardcoverBook
               coverMap={coverMap}
@@ -275,11 +295,11 @@ export default function BookDisplay({
       </Canvas>
       <div className="text-gray-200 text-sm font-medium absolute -bottom-8 text-center px-4 py-2 rounded-md z-10 bg-gray-600">
         <div>
-          {imageWidth * dpr} &times; {(imageHeight * dpr).toFixed(0)} pixels
+          {imageWidth.toFixed(0)} &times; {imageHeight.toFixed(0)} pixels
         </div>
         <div>
-          {(finalWidth / 300).toFixed(2)}" &times;{" "}
-          {(finalHeight / 300).toFixed(2)}" @ 300ppi
+          {(imageWidth / 300).toFixed(2)}" &times;{" "}
+          {(imageHeight / 300).toFixed(2)}" @ 300ppi
         </div>
       </div>
     </div>

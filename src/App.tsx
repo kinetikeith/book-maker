@@ -1,8 +1,10 @@
 import { useDropzone } from "react-dropzone";
-import BookDisplay, { BookType } from "./components/BookDisplay";
+import BookDisplay from "./components/BookDisplay";
+import { BookType, ScalingMode } from "./enums.ts";
 import {
   ChangeEvent,
   ClipboardEvent,
+  FocusEvent,
   useCallback,
   useEffect,
   useRef,
@@ -69,11 +71,24 @@ const bookTypeLabels = new Map<BookType, string>([
   [BookType.Saddlestitch, "Saddlestitch"],
 ]);
 
-const scaleLabels = new Map<number, string>([
-  [1.0, "100%"],
-  [1.5, "150%"],
-  [2.0, "200%"],
-  [2.5, "250%"],
+const scalingModeLabels = new Map<ScalingMode, string>([
+  [ScalingMode.FixedWidth, "Fixed Width"],
+  [ScalingMode.FixedHeight, "Fixed Height"],
+]);
+
+enum Units {
+  Pixel,
+  Inch,
+}
+
+const unitLabels = new Map<Units, string>([
+  [Units.Pixel, "px"],
+  [Units.Inch, "in"],
+]);
+
+const unitFactors = new Map<Units, number>([
+  [Units.Pixel, 1],
+  [Units.Inch, 300],
 ]);
 
 export default function App() {
@@ -86,7 +101,25 @@ export default function App() {
   const [backColorTemp, setBackColorTemp] = useState("#3db999");
   const [bookType, setBookType] = useState<BookType>(BookType.PerfectBound);
 
-  const [scale, setScale] = useState<number>(1.0);
+  const [scalingMode, setScalingMode] = useState<ScalingMode>(
+    ScalingMode.FixedWidth,
+  );
+  const [size, setSize] = useState<number>(1200);
+  const [unit, setUnit] = useState<Units>(Units.Pixel);
+
+  let sizeInUnits = size.toFixed(0);
+  if (unit !== Units.Pixel)
+    sizeInUnits = (size / (unitFactors.get(unit) || 1)).toFixed(3);
+  const [sizeInUnitsText, setSizeInUnitsText] = useState<string | null>(null);
+
+  const setSizeInUnits = (sizeInUnits: number) => {
+    let pixelSize = sizeInUnits * (unitFactors.get(unit) || 1);
+    pixelSize = Math.round(pixelSize);
+    pixelSize = Math.max(pixelSize, 600);
+    pixelSize = Math.min(pixelSize, 3000);
+    setSize(pixelSize);
+    setSizeInUnitsText(null);
+  };
 
   /*
   const params = new URLSearchParams(document.location.search);
@@ -221,11 +254,11 @@ export default function App() {
   return (
     <div onPaste={handlePaste}>
       <section className="fixed right-4 top-4 flex flex-col items-stetch space-y-4 bg-gray-900 p-4 rounded-xl w-80">
-        <Field className="relative">
+        <Field>
           <Label className="block mb-2 text-sm font-medium text-white">
             Book Type
           </Label>
-          <div>
+          <div className="relative z-10">
             <Listbox value={bookType} onChange={setBookType}>
               <ListboxButton className="border text-sm rounded-lg block w-full text-left p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
                 {bookTypeLabels.get(bookType)}
@@ -319,7 +352,7 @@ export default function App() {
             <Input
               type="text"
               id="color_hex"
-              className="border text-sm rounded-lg block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+              className="border text-sm rounded-lg block w-full p-2.5 bg-gray-800 border-gray-600 placeholder-gray-300 text-white focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
               placeholder="#ffffff"
               value={backColorTemp}
               onChange={(event: ChangeEvent<HTMLInputElement>) => {
@@ -331,26 +364,71 @@ export default function App() {
             />
           </div>
         ) : null}
-        <Field className="relative">
+        <Field>
           <Label className="block mb-2 text-sm font-medium text-white">
+            Scaling Mode
+          </Label>
+          <div className="relative z-10">
+            <Listbox value={scalingMode} onChange={setScalingMode}>
+              <ListboxButton className="border text-sm rounded-lg block w-full text-left p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
+                {scalingModeLabels.get(scalingMode)}
+              </ListboxButton>
+              <ListboxOptions className="absolute inset-x-0 top-0 border text-sm rounded-lg block overflow-clip w-full bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
+                {[...scalingModeLabels.entries()].map(
+                  ([scalingMode, label]) => (
+                    <ListboxOption
+                      value={scalingMode}
+                      key={scalingMode}
+                      className="p-2.5 hover:bg-gray-800 cursor-pointer"
+                    >
+                      {label}
+                    </ListboxOption>
+                  ),
+                )}
+              </ListboxOptions>
+            </Listbox>
+          </div>
+        </Field>
+        <Field>
+          <Label className="block mb-2 text-sm font-medium text-white sr-only">
             Scale
           </Label>
-          <Listbox value={scale} onChange={setScale}>
-            <ListboxButton className="border text-sm rounded-lg block w-full text-left p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
-              {scaleLabels.get(scale)}
-            </ListboxButton>
-            <ListboxOptions className="absolute inset-x-0 top-0 border text-sm rounded-lg block overflow-clip w-full bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
-              {[...scaleLabels.entries()].map(([scale, label]) => (
-                <ListboxOption
-                  value={scale}
-                  key={scale}
-                  className="p-2.5 hover:bg-gray-800 cursor-pointer"
-                >
-                  {label}
-                </ListboxOption>
-              ))}
-            </ListboxOptions>
-          </Listbox>
+          <div className="relative w-full flex">
+            <Input
+              type="number"
+              id="size-input"
+              className="border text-sm w-full rounded-l-lg block p-2.5 bg-gray-800 border-gray-600 border-r-0 placeholder-gray-300 text-white focus:ring-blue-500 focus:border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              placeholder={
+                scalingMode === ScalingMode.FixedWidth ? "Width" : "Height"
+              }
+              value={sizeInUnitsText || sizeInUnits}
+              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                setSizeInUnitsText(event.target.value);
+              }}
+              onBlur={(event: FocusEvent<HTMLInputElement>) => {
+                setSizeInUnits(parseFloat(event.target.value));
+              }}
+              required
+            />
+            <div className="relative">
+              <Listbox value={unit} onChange={setUnit}>
+                <ListboxButton className="shrink-0 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700 dark:text-white dark:border-gray-600">
+                  {unitLabels.get(unit)}
+                </ListboxButton>
+                <ListboxOptions className="absolute inset-x-0 top-0 border text-sm rounded-r-lg block overflow-clip w-full bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
+                  {[...unitLabels.entries()].map(([unit, label]) => (
+                    <ListboxOption
+                      value={unit}
+                      key={unit}
+                      className="p-2.5 hover:bg-gray-800 cursor-pointer"
+                    >
+                      {label}
+                    </ListboxOption>
+                  ))}
+                </ListboxOptions>
+              </Listbox>
+            </div>
+          </div>
         </Field>
         <Button
           onClick={triggerDownload}
@@ -372,7 +450,8 @@ export default function App() {
           spineUrl={spineUrl}
           backColor={backColor}
           bookType={bookType}
-          scale={scale}
+          scalingMode={scalingMode}
+          size={size}
         />
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center"></footer>
