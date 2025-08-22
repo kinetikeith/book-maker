@@ -25,6 +25,7 @@ import FileSaver from "file-saver";
 import { parse as pathParse } from "path-browserify";
 import Psd from "@webtoon/psd";
 import { CheckIcon } from "@heroicons/react/16/solid";
+import { EyeDropperIcon } from "@heroicons/react/20/solid";
 
 /* https://stackoverflow.com/questions/18650168/convert-blob-to-base64 */
 function blobToDataUrl(blob: Blob): Promise<string> {
@@ -91,6 +92,12 @@ const unitFactors = new Map<Units, number>([
   [Units.Inch, 300],
 ]);
 
+// https://stackoverflow.com/a/6736135/16691788
+function rgbToHex(r: number, g: number, b: number) {
+  if (r > 255 || g > 255 || b > 255) throw "Invalid color component";
+  return "#" + ("000000" + ((r << 16) | (g << 8) | b).toString(16)).slice(-6);
+}
+
 export default function App() {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const spineInputRef = useRef<HTMLInputElement>(null);
@@ -120,16 +127,6 @@ export default function App() {
     setSize(pixelSize);
     setSizeInUnitsText(null);
   };
-
-  /*
-  const params = new URLSearchParams(document.location.search);
-  const scale = parseFloat(params.get("scale") || "1.0");
-  const setScale = useCallback((value: number) => {
-    const urlParams = new URLSearchParams(window.location.search);
-    urlParams.set("scale", value.toFixed(1));
-    window.location.search = urlParams.toString();
-  }, []);
-  */
 
   const [fileName, setFileName] = useState("Untitled");
   const [copied, setCopied] = useState(false);
@@ -221,6 +218,36 @@ export default function App() {
       }
     }
   }, []);
+
+  const triggerColorPick = useCallback((event: MouseEvent) => {
+    const canvas: HTMLCanvasElement | null = event.target as HTMLCanvasElement;
+    if (canvas !== null) {
+      const rect = canvas.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) * canvas.width) / rect.width;
+      const y = ((rect.bottom - event.clientY) * canvas.height) / rect.height;
+      //console.log(rect.width / canvas.width, rect.height / canvas.height);
+      const context = canvas.getContext("webgl2");
+      if (context === null) return;
+      const pixels = new Uint8Array(4);
+      context.readPixels(
+        x,
+        y,
+        1,
+        1,
+        context.RGBA,
+        context.UNSIGNED_BYTE,
+        pixels,
+      );
+      setBackColor(rgbToHex(pixels[0], pixels[1], pixels[2]));
+    }
+  }, []);
+
+  const triggerColorPickStart = useCallback(() => {
+    const canvas: HTMLCanvasElement | null = document.querySelector("canvas");
+    if (canvas !== null) {
+      canvas.addEventListener("click", triggerColorPick, { once: true });
+    }
+  }, [triggerColorPick]);
 
   const coverExists = coverUrl !== defaultCover;
   const spineExists = spineUrl !== defaultSpine;
@@ -349,19 +376,27 @@ export default function App() {
               Back Cover
             </label>
             <HexColorPicker color={backColor} onChange={setBackColor} />
-            <Input
-              type="text"
-              id="color_hex"
-              className="border text-sm rounded-lg block w-full p-2.5 bg-gray-800 border-gray-600 placeholder-gray-300 text-white focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
-              placeholder="#ffffff"
-              value={backColorTemp}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                const value = event.target.value;
-                if (value.length > 7) return;
-                if (/^#([0-9A-F]{3}){1,2}$/i.test(value)) setBackColor(value);
-                setBackColorTemp(value);
-              }}
-            />
+            <div className="relative w-full flex">
+              <Input
+                type="text"
+                id="color_hex"
+                className="border text-sm border-r-0 rounded-l-lg block w-full p-2.5 bg-gray-800 border-gray-600 placeholder-gray-300 text-white focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                placeholder="#ffffff"
+                value={backColorTemp}
+                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                  const value = event.target.value;
+                  if (value.length > 7) return;
+                  if (/^#([0-9A-F]{3}){1,2}$/i.test(value)) setBackColor(value);
+                  setBackColorTemp(value);
+                }}
+              />
+              <Button
+                onClick={triggerColorPickStart}
+                className="border text-sm rounded-r-lg block text-left p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+              >
+                <EyeDropperIcon className="size-4" />
+              </Button>
+            </div>
           </div>
         ) : null}
         <Field>
