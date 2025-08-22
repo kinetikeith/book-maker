@@ -215,11 +215,6 @@ export default function BookDisplay({
     }
   }, [scalingMode, size, coverAspect, spineAspect, bookType]);
 
-  /*
-  const imageWidth = 600;
-  const zoom = imageWidth * 0.68;
-  const imageHeight = Math.min((imageWidth * 0.8) / itemScalingInv, 900);
-  */
   const dpr = Math.max(imageWidth / 600, 1);
   const viewWidth = imageWidth / dpr;
   const viewHeight = imageHeight / dpr;
