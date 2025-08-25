@@ -196,26 +196,35 @@ export default function BookDisplay({
   const coverAspect = coverMap.image.width / coverMap.image.height;
   const spineAspect = spineMap.image.width / spineMap.image.height;
 
-  const { imageWidth, imageHeight, zoom } = useMemo(() => {
+  let { imageWidth, imageHeight, zoom } = useMemo(() => {
     let itemScalingInv = coverAspect;
-    if (bookType !== BookType.Saddlestitch) itemScalingInv += spineAspect * 0.5;
+    if (bookType !== BookType.Saddlestitch) itemScalingInv += spineAspect * 0.4;
 
     if (scalingMode === ScalingMode.FixedWidth) {
       return {
         imageWidth: size,
         imageHeight: (size * 0.8) / itemScalingInv,
-        zoom: size * 0.45,
+        zoom: size / itemScalingInv / 600,
       };
     } else {
       return {
-        imageWidth: size * itemScalingInv,
+        imageWidth: size * 1.3 * itemScalingInv,
         imageHeight: size,
-        zoom: size * 0.3,
+        zoom: size / 480,
       };
     }
   }, [scalingMode, size, coverAspect, spineAspect, bookType]);
 
-  const dpr = Math.max(imageWidth / 600, 1);
+  const pixels = imageWidth * imageHeight;
+  const MAX_PIXELS = 7200000;
+  if (pixels > MAX_PIXELS) {
+    const scalingRatio = Math.sqrt(pixels / MAX_PIXELS);
+    imageWidth /= scalingRatio;
+    imageHeight /= scalingRatio;
+    zoom /= scalingRatio;
+  }
+
+  const dpr = Math.max(Math.max(imageWidth, imageHeight) / 600, 1);
   const viewWidth = imageWidth / dpr;
   const viewHeight = imageHeight / dpr;
 
@@ -255,7 +264,7 @@ export default function BookDisplay({
             denoiseSamples={16}
           />
         </EffectComposer>
-        <group scale={viewHeight / 600}>
+        <group scale={zoom / dpr}>
           {bookType === BookType.Hardcover ? (
             <HardcoverBook
               coverMap={coverMap}
