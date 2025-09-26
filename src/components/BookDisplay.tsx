@@ -184,10 +184,6 @@ function SpiralBoundBook({
 }) {
   const pageMap = useLoader(TextureLoader, "page-effect.png");
   const spineMap = useLoader(TextureLoader, "page-effect-vertical.png");
-  const coverNormalMap = useLoader(
-    TextureLoader,
-    "spiralbound-cover-normal.png",
-  );
   const spineNormalMap = useLoader(
     TextureLoader,
     "spiralbound-spine-normal.png",
@@ -200,7 +196,6 @@ function SpiralBoundBook({
         <planeGeometry args={[coverAspect, 1]} />
         <meshStandardMaterial
           map={coverMap}
-          normalMap={coverNormalMap}
           side={2}
           shadowSide={2}
           normalScale={0.7}
@@ -218,7 +213,7 @@ function SpiralBoundBook({
           normalMap={spineNormalMap}
           side={2}
           shadowSide={2}
-          normalScale={0.4}
+          normalScale={0.35}
         />
       </mesh>
       <mesh
