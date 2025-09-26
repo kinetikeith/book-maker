@@ -70,6 +70,7 @@ const bookTypeLabels = new Map<BookType, string>([
   [BookType.PerfectBound, "Perfect bound"],
   [BookType.Hardcover, "Hardcover"],
   [BookType.Saddlestitch, "Saddlestitch"],
+  [BookType.SpiralBound, "Spiral bound (partial)"],
 ]);
 
 const scalingModeLabels = new Map<ScalingMode, string>([
@@ -113,6 +114,7 @@ export default function App() {
   );
   const [size, setSize] = useState<number>(1200);
   const [unit, setUnit] = useState<Units>(Units.Pixel);
+  const [spineWidth, setSpineWidth] = useState<number>(0.25);
 
   let sizeInUnits = size.toFixed(0);
   if (unit !== Units.Pixel)
@@ -404,6 +406,23 @@ export default function App() {
             </div>
           </div>
         ) : null}
+        {bookType === BookType.SpiralBound ? (
+          <Field className="space-y-4">
+            <Label className="block mb-2 text-sm font-medium text-white">
+              Spine Width
+            </Label>
+            <Input
+              type="number"
+              id="size-input"
+              className="border text-sm w-full rounded-lg block p-2.5 bg-gray-800 border-gray-600 placeholder-gray-300 text-white focus:ring-blue-500 focus:border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              placeholder="Width"
+              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                setSpineWidth(parseFloat(event.target.value));
+              }}
+              required
+            />
+          </Field>
+        ) : null}
         <Field>
           <Label className="block mb-2 text-sm font-medium text-white">
             Scaling
@@ -491,6 +510,7 @@ export default function App() {
           backColor={backColor}
           bookType={bookType}
           scalingMode={scalingMode}
+          spineWidth={spineWidth}
           size={size}
         />
       </main>
